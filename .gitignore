@@ -1,6 +1,5 @@
 *.o
-spy
-victim
+*.csv
+*.DS_Store
+*.txt
 *~
-core
-calibration

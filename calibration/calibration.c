@@ -2,14 +2,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <sched.h>
+#include <stdio.h>
 #include "../cacheutils.h"
 
-size_t array[5*1024];
+#define ARRAY_SIZE 5120
+#define PROBE_OFFSET 2048
+#define N_PROBES 4194304
+#define N_BINS 80
 
-size_t hit_histogram[80];
-size_t miss_histogram[80];
+size_t array[ARRAY_SIZE];
+
+size_t hit_histogram[N_BINS];
+size_t miss_histogram[N_BINS];
 
 size_t onlyreload(void* addr)
+//Access a given address and return the number of CPU cycles taken to access that address
 {
   size_t time = rdtsc();
   maccess(addr);
@@ -18,6 +25,7 @@ size_t onlyreload(void* addr)
 }
 
 size_t flushandreload(void* addr)
+//Access a given address, flush the address, and return the number of CPU cycles taken to access that address
 {
   size_t time = rdtsc();
   maccess(addr);
@@ -28,29 +36,38 @@ size_t flushandreload(void* addr)
 
 int main(int argc, char** argv)
 {
-  memset(array,-1,5*1024*sizeof(size_t));
-  maccess(array + 2*1024);
+  //Initialization
+  memset(array,-1,ARRAY_SIZE*sizeof(size_t)); 
+  
+  //Get timing for cache hits
+  maccess(array + PROBE_OFFSET); 
   sched_yield();
-  for (int i = 0; i < 4*1024*1024; ++i)
+  for (int i = 0; i < N_PROBES; ++i)
   {
-    size_t d = onlyreload(array+2*1024);
-    hit_histogram[MIN(79,d/5)]++;
+    size_t d = onlyreload(array+PROBE_OFFSET); 
+    hit_histogram[MIN((N_BINS - 1),d/5)]++;
     sched_yield();
   }
-  flush(array+2*1024);
-  for (int i = 0; i < 4*1024*1024; ++i)
+
+  //Get timing for cache misses
+  flush(array+PROBE_OFFSET);
+  for (int i = 0; i < N_PROBES; ++i)
   {
-    size_t d = flushandreload(array+2*1024);
-    miss_histogram[MIN(79,d/5)]++;
+    size_t d = flushandreload(array+PROBE_OFFSET);
+    miss_histogram[MIN((N_BINS - 1),d/5)]++;
     sched_yield();
   }
+
+  //printing
   printf(".\n");
   size_t hit_max = 0;
   size_t hit_max_i = 0;
   size_t miss_min_i = 0;
-  for (int i = 0; i < 80; ++i)
+  FILE *outfile;
+  outfile = fopen("histogram.csv", "w");
+  for (int i = 0; i < N_BINS; ++i)
   {
-    printf("%3d: %10zu %10zu\n",i*5,hit_histogram[i],miss_histogram[i]);
+    fprintf(outfile, "%3d\t%10zu\t%10zu\n",i*5,hit_histogram[i],miss_histogram[i]);
     if (hit_max < hit_histogram[i])
     {
       hit_max = hit_histogram[i];
@@ -77,7 +94,9 @@ int main(int argc, char** argv)
       min_i = i;
     }
   }
+  fclose(outfile);
   printf("The lower the threshold, the lower the number of false positives.\n");
   printf("Suggested cache hit/miss threshold: %zu\n",min_i * 5);
   return min_i * 5;
 }
+
