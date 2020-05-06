@@ -4,7 +4,7 @@ This repository contains a toy example to demonstrate the cache template attack 
 
 The cache template attack is itself based on another work: "[FLUSH+RELOAD: a High Resolution, Low Noise, L3 Cache Side-Channel Attack](https://www.usenix.org/conference/usenixsecurity14/technical-sessions/presentation/yarom)" (2014). 
 
-This repository was developed as part of an initiative to develop hands-on labs to allow undergraduate and graduate students to learn the dynamics of attacks based on shared resources and aimed at informaiton leakage.
+This repository was developed as part of an initiative in the University of Delaware Electrical and Computer Engineering Department to develop hands-on labs to allow undergraduate and graduate students to learn the dynamics of attacks based on shared resources and aimed at information leakage.
 
 
 
