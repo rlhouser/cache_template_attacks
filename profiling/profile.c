@@ -63,7 +63,7 @@ int main(int argc, char** argv)
   start = ((unsigned char*)mmap(0, range, PROT_READ, MAP_SHARED, fd, offset & ~0xFFFUL)) + (offset & 0xFFFUL); 
   FILE *fp;
   FILE *fpo;
-  char* chars = "1234567890";
+  char* chars = "0123456789";
   size_t chars_len = strlen(chars);
   size_t count = 0;
   fpo = fopen("profile.txt", "w");
